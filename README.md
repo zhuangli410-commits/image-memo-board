@@ -18,31 +18,34 @@
 
 ## 安装
 
-**让 AI 帮你装**：把这个仓库链接发给 Claude Code 并说「帮我安装这个」
+### 直接下载
 
-**手动安装**：
+前往 [Releases](https://github.com/zemei641-ship-it/image-staging-board/releases/latest) 下载对应平台的文件：
+
+| 平台 | 文件 | 说明 |
+|------|------|------|
+| **macOS** (Apple Silicon) | `图片剪贴板-x.x.x-arm64.dmg` | 打开 DMG，拖入 Applications |
+| **Windows** (x64) | `图片剪贴板-x.x.x-win-x64.zip` | 解压后运行 `图片剪贴板.exe` |
+
+> **macOS 注意**：未签名应用首次打开需右键 → 打开，或执行：
+> ```bash
+> xattr -cr /Applications/图片剪贴板.app
+> ```
+
+### 用 AI 一键安装
+
+把仓库链接发给 Claude Code 并说「帮我安装这个」，AI 会自动完成克隆、依赖安装和启动。
+
+### 从源码运行
 
 ```bash
-git clone https://github.com/zemei641-ship-it/image-clipboard.git
-cd image-clipboard
+git clone https://github.com/zemei641-ship-it/image-staging-board.git
+cd image-staging-board
 npm install
 npm start
 ```
 
 需要 Node.js 18+ 和 npm。
-
-## 打包为 .app
-
-```bash
-npm run build:mac
-```
-
-生成文件在 `dist/` 目录，DMG 可直接发给他人安装。
-
-> 注意：未签名应用首次打开需右键 → 打开，或执行：
-> ```bash
-> xattr -cr /Applications/图片剪贴板.app
-> ```
 
 ## 截图保存位置
 
