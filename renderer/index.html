@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>图片剪贴板</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="titlebar">
+      <span id="title">📋 图片剪贴板</span>
+      <div id="controls">
+        <button id="btn-folder" title="打开文件夹">📁</button>
+        <button id="btn-min" title="最小化">−</button>
+        <button id="btn-close" title="关闭">✕</button>
+      </div>
+    </div>
+
+    <div id="drop-zone">
+      <div id="drop-hint">拖入图片 · ⌘V 粘贴 · ⌘⇧X 截图</div>
+    </div>
+
+    <div id="grid"></div>
+
+    <div id="statusbar">
+      <span id="count">0 张图</span>
+      <span id="hint">单击复制 · 拖出使用</span>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>
