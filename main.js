@@ -10,27 +10,43 @@ fs.mkdirSync(CLIPBOARD_DIR, { recursive: true })
 
 let mainWindow
 let lastClipboardHash = null
+let lastClipboardSize = null
 
 function getImageHash(img) {
   return crypto.createHash('md5').update(img.toPNG()).digest('hex')
 }
 
 function startClipboardWatcher() {
-  // seed hash so we don't re-save whatever's already in clipboard on launch
   const existing = clipboard.readImage()
-  if (!existing.isEmpty()) lastClipboardHash = getImageHash(existing)
+  if (!existing.isEmpty()) {
+    lastClipboardHash = getImageHash(existing)
+    lastClipboardSize = existing.getSize()
+  }
 
   setInterval(() => {
     try {
       const img = clipboard.readImage()
       if (img.isEmpty()) return
-      const hash = getImageHash(img)
-      if (hash === lastClipboardHash) return
-      lastClipboardHash = hash
-      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-      fs.writeFileSync(path.join(CLIPBOARD_DIR, `${ts}.png`), img.toPNG())
+      const size = img.getSize()
+      // cheap size pre-check before the expensive toPNG
+      if (lastClipboardSize && size.width === lastClipboardSize.width && size.height === lastClipboardSize.height) {
+        const pngBytes = img.toPNG()
+        const hash = crypto.createHash('md5').update(pngBytes).digest('hex')
+        if (hash === lastClipboardHash) return
+        lastClipboardHash = hash
+        lastClipboardSize = size
+        const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+        fs.writeFileSync(path.join(CLIPBOARD_DIR, `${ts}.png`), pngBytes)
+      } else {
+        // size changed → definitely new image, no need for hash comparison
+        const pngBytes = img.toPNG()
+        lastClipboardHash = crypto.createHash('md5').update(pngBytes).digest('hex')
+        lastClipboardSize = size
+        const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+        fs.writeFileSync(path.join(CLIPBOARD_DIR, `${ts}.png`), pngBytes)
+      }
     } catch {}
-  }, 800)
+  }, 1500)
 }
 
 function createWindow() {
@@ -126,10 +142,12 @@ ipcMain.handle('save-dropped', (_, srcPath) => {
 ipcMain.handle('paste-clipboard', () => {
   const img = clipboard.readImage()
   if (!img.isEmpty()) {
-    lastClipboardHash = getImageHash(img)
+    const pngBytes = img.toPNG()
+    lastClipboardHash = crypto.createHash('md5').update(pngBytes).digest('hex')
+    lastClipboardSize = img.getSize()
     const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
     const dest = path.join(CLIPBOARD_DIR, `${ts}.png`)
-    fs.writeFileSync(dest, img.toPNG())
+    fs.writeFileSync(dest, pngBytes)
     return dest
   }
   return null
@@ -138,7 +156,9 @@ ipcMain.handle('paste-clipboard', () => {
 ipcMain.handle('copy-to-clipboard', (_, fp) => {
   const img = nativeImage.createFromPath(fp)
   if (!img.isEmpty()) {
-    lastClipboardHash = getImageHash(img)
+    const pngBytes = img.toPNG()
+    lastClipboardHash = crypto.createHash('md5').update(pngBytes).digest('hex')
+    lastClipboardSize = img.getSize()
     clipboard.writeImage(img)
   }
 })

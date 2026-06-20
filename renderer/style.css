@@ -24,8 +24,8 @@ body {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.06) inset;
   display: flex;
   flex-direction: column;
@@ -123,6 +123,7 @@ body {
   cursor: grab;
   border: 1px solid rgba(255,255,255,0.06);
   background: rgba(255,255,255,0.04);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(0,0,0,0.5);
   transition: transform 0.1s, border-color 0.15s;
 }
 

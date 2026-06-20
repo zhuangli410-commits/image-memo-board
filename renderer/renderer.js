@@ -45,6 +45,19 @@ function render() {
       </div>
     `
 
+    // downscale to 180×180 after load so full-res is freed from memory
+    const imgEl = div.querySelector('img')
+    imgEl.addEventListener('load', function () {
+      const S = 180
+      const canvas = document.createElement('canvas')
+      canvas.width = S; canvas.height = S
+      const ctx = canvas.getContext('2d')
+      const scale = Math.max(S / this.naturalWidth, S / this.naturalHeight)
+      const w = this.naturalWidth * scale, h = this.naturalHeight * scale
+      ctx.drawImage(this, (S - w) / 2, (S - h) / 2, w, h)
+      this.src = canvas.toDataURL('image/jpeg', 0.82)
+    }, { once: true })
+
     div.addEventListener('dragstart', e => {
       e.preventDefault()
       window.api.dragOut(img.path)
