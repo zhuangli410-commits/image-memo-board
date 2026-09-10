@@ -1,32 +1,218 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>图片剪贴板</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图片备忘站</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div id="app">
-    <div id="titlebar">
-      <span id="title">📋 图片剪贴板</span>
-      <div id="controls">
-        <button id="btn-folder" title="打开文件夹">📁</button>
-        <button id="btn-min" title="最小化">−</button>
-        <button id="btn-close" title="关闭">✕</button>
+<body data-mode="mini" data-placement="right">
+  <section id="mini-shell" aria-label="图片备忘站迷你组件">
+    <span id="mini-grip" title="拖动小球位置" aria-label="拖动小球位置">•••</span>
+    <button id="mini-ring" title="轻点查看待办，按住可拖动">
+      <span id="mini-ring-inner">
+        <strong id="mini-time">--:--</strong>
+        <small id="mini-label">
+          <i id="mini-ddl-dot" aria-hidden="true"></i>
+          <span id="mini-ddl-text">今日</span>
+        </small>
+      </span>
+    </button>
+    <div id="mini-hover-tasks" aria-label="当前待办，滚动切换">
+      <div id="mini-hover-track" aria-live="polite"></div>
+    </div>
+    <div id="mini-actions">
+      <button id="btn-open-board"><span aria-hidden="true">▧</span>图片中转站</button>
+      <button id="btn-open-memos" title="查看待办"><span aria-hidden="true">✓</span>待办</button>
+    </div>
+  </section>
+
+  <section id="panel-shell">
+    <header id="titlebar">
+      <div id="brand">
+        <span>◉</span>
+        <strong>图片备忘站</strong>
       </div>
+      <div id="controls">
+        <button id="btn-folder" title="打开图片文件夹">📁</button>
+        <button id="btn-settings" title="设置">⚙</button>
+        <button id="btn-min" title="收起为迷你组件">−</button>
+        <button id="btn-close" title="收起">✕</button>
+      </div>
+    </header>
+
+    <nav id="tabs">
+      <button class="tab active" data-view="board">图片</button>
+      <button class="tab" data-view="memos">待办</button>
+      <button class="tab" data-view="calendar">日历</button>
+      <button class="tab" data-view="clock">时钟</button>
+    </nav>
+
+    <div id="quick-actions">
+      <button id="btn-shot">⌘J 苹果截屏</button>
+      <button id="btn-text">＋文字</button>
+      <button id="btn-voice">🎙 语音</button>
+      <button id="btn-voice-import">⇧ 导入语音</button>
+      <span id="recording-state"></span>
     </div>
 
-    <div id="drop-zone">
-      <div id="drop-hint">拖入图片 · ⌘V 粘贴 · ⌘⇧X 截图</div>
-    </div>
+    <main id="views">
+      <section class="view active" id="view-board">
+        <div id="drop-zone">
+          <div id="drop-hint">拖入图片或视频 · ⌘V 粘贴 · ⌘J 苹果截屏</div>
+        </div>
+        <div id="board-toolbar">
+          <div id="board-entry-actions">
+            <button id="btn-media-import">＋ 批量导入</button>
+            <button id="btn-board-paste">粘贴</button>
+          </div>
+          <div id="batch-actions" hidden>
+            <strong id="selection-count">已选 0 项</strong>
+            <button id="btn-batch-export">导出</button>
+            <button id="btn-batch-ocr">OCR</button>
+            <button id="btn-batch-delete" class="danger">删除</button>
+            <button id="btn-selection-clear" title="取消选择">✕</button>
+          </div>
+        </div>
+        <div id="grid"></div>
+        <footer class="statusbar">
+          <span id="image-count">0 张图</span>
+          <span>复制 · 拖出 · 备忘 · 图片 OCR</span>
+        </footer>
+      </section>
 
-    <div id="grid"></div>
+      <section class="view" id="view-memos">
+        <div id="memo-summary"></div>
+        <div id="memo-list"></div>
+      </section>
 
-    <div id="statusbar">
-      <span id="count">0 张图</span>
-      <span id="hint">单击复制 · 拖出使用</span>
-    </div>
-  </div>
+      <section class="view" id="view-calendar">
+        <div id="calendar-head">
+          <button id="cal-prev">‹</button>
+          <strong id="calendar-title"></strong>
+          <button id="cal-next">›</button>
+        </div>
+        <div class="weekdays">
+          <span>一</span><span>二</span><span>三</span><span>四</span>
+          <span>五</span><span>六</span><span>日</span>
+        </div>
+        <div id="calendar-grid"></div>
+        <div id="calendar-day-list"></div>
+      </section>
+
+      <section class="view" id="view-clock">
+        <div id="clock-dial">
+          <div class="dial-center">
+            <strong id="dial-time">--:--</strong>
+            <span id="dial-date"></span>
+          </div>
+          <div id="clock-tasks"></div>
+        </div>
+        <div id="clock-list"></div>
+      </section>
+    </main>
+  </section>
+
+  <dialog id="memo-dialog">
+    <form id="memo-form" method="dialog">
+      <header>
+        <strong id="memo-dialog-title">新建备忘</strong>
+        <button type="button" class="icon-button" id="memo-cancel-top">✕</button>
+      </header>
+      <input type="hidden" id="memo-id">
+      <input type="hidden" id="memo-type">
+      <input type="hidden" id="memo-image-path">
+      <input type="hidden" id="memo-audio-path">
+      <input type="hidden" id="memo-parent-id">
+      <label>
+        标题
+        <input id="memo-title-input" maxlength="120" required placeholder="要记住什么？">
+      </label>
+      <label>
+        内容
+        <textarea id="memo-content-input" rows="7" placeholder="输入备注、OCR 或语音转写内容"></textarea>
+      </label>
+      <div class="form-row">
+        <label>
+          优先级
+          <select id="memo-priority-input">
+            <option value="high">高</option>
+            <option value="medium" selected>中</option>
+            <option value="low">低</option>
+          </select>
+        </label>
+        <fieldset id="memo-color-field">
+          <legend>标记颜色</legend>
+          <div id="memo-color-options" role="radiogroup" aria-label="标记颜色">
+            <label class="color-choice" title="蓝色"><input type="radio" name="memo-color" value="#5b9cf6" checked><span style="--choice-color:#5b9cf6"></span></label>
+            <label class="color-choice" title="红色"><input type="radio" name="memo-color" value="#ff453a"><span style="--choice-color:#ff453a"></span></label>
+            <label class="color-choice" title="橙色"><input type="radio" name="memo-color" value="#ff9f0a"><span style="--choice-color:#ff9f0a"></span></label>
+            <label class="color-choice" title="黄色"><input type="radio" name="memo-color" value="#ffd60a"><span style="--choice-color:#ffd60a"></span></label>
+            <label class="color-choice" title="绿色"><input type="radio" name="memo-color" value="#30d158"><span style="--choice-color:#30d158"></span></label>
+            <label class="color-choice" title="青色"><input type="radio" name="memo-color" value="#32c7d9"><span style="--choice-color:#32c7d9"></span></label>
+            <label class="color-choice" title="紫色"><input type="radio" name="memo-color" value="#bf5af2"><span style="--choice-color:#bf5af2"></span></label>
+            <label class="color-choice" title="粉色"><input type="radio" name="memo-color" value="#ff4fa3"><span style="--choice-color:#ff4fa3"></span></label>
+          </div>
+        </fieldset>
+        <label>
+          DDL
+          <input type="datetime-local" id="memo-due-input">
+        </label>
+        <label>
+          提前提醒
+          <select id="memo-remind-input">
+            <option value="0">到点</option>
+            <option value="5">5 分钟</option>
+            <option value="30">30 分钟</option>
+            <option value="60">1 小时</option>
+            <option value="1440">1 天</option>
+          </select>
+        </label>
+      </div>
+      <div id="memo-preview"></div>
+      <footer>
+        <button type="button" class="secondary" id="memo-cancel">取消</button>
+        <button type="button" class="secondary" id="memo-ai-plan">✨ DeepSeek 排待办</button>
+        <button type="submit" class="primary">保存备忘</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <form id="settings-form" method="dialog">
+      <header>
+        <strong>DeepSeek 设置</strong>
+        <button type="button" class="icon-button" id="settings-cancel-top">✕</button>
+      </header>
+      <p class="form-tip">API Key 使用 macOS 安全存储加密，只在主进程请求接口时读取。</p>
+      <label>
+        API 地址
+        <input id="ai-endpoint" type="url" required>
+      </label>
+      <label>
+        模型
+        <input id="ai-model" required>
+      </label>
+      <label>
+        API Key
+        <input id="ai-key" type="password" autocomplete="off" placeholder="留空则保留已保存的 Key">
+      </label>
+      <label class="checkbox-label">
+        <input id="ai-clear-key" type="checkbox">
+        清除已经保存的 Key
+      </label>
+      <div id="shortcut-note"></div>
+      <footer>
+        <button type="button" class="danger-text" id="btn-quit">完全退出应用</button>
+        <span class="footer-spacer"></span>
+        <button type="button" class="secondary" id="settings-cancel">取消</button>
+        <button type="submit" class="primary">保存</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div id="toast"></div>
+  <div id="selection-marquee" aria-hidden="true"></div>
   <script src="renderer.js"></script>
 </body>
 </html>

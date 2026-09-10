@@ -1,4 +1,7 @@
 node_modules/
 dist/
+native/bin/
+.DS_Store
 assets/icon.icns
 assets/icon.ico
+work/

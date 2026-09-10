@@ -1,61 +1,66 @@
-# 图片剪贴板
+# 图片备忘站
 
-一个 macOS 浮动图片剪贴板工具，截图/复制的图片自动出现在面板，随时单击复制或拖出使用。
+基于原“图片剪贴板”扩展的 macOS 常驻桌面备忘工具。保留截图/复制图片自动进入中转站、粘贴、拖入、复制和拖出功能，并增加多模态备忘、DDL 与桌面迷你组件。
 
-<p align="center">
-  <img src="docs/screenshot.png" width="300" alt="图片剪贴板界面" />
-</p>
+## 初版功能
 
-## 功能
+- 默认位于主屏左下角的迷你时钟与最近 DDL 圆形进度环
+- 按住小球任意位置可自定义位置，重启和切换显示器后自动恢复
+- 悬停显示“图片中转站”和“待办”入口
+- 图片与视频中转站支持批量导入、多文件粘贴、所选项批量导出，以及拖入、复制、拖出、删除和直接创建备忘；图片额外支持 OCR
+- 中转卡片沿用 macOS Finder 选择习惯：点击单选、`⌘` 点击增减、`Shift` 连选、空白处拖拽框选和 `⌘A` 全选
+- 已选图片可一次批量 OCR，已选图片或视频可一次批量删除并移入系统废纸篓
+- `⌘J` 打开苹果原生截屏工具（同时支持 `⌘⇧X` 和系统原生截屏快捷键），截图自动导入中转站
+- 图片直接转备忘，或通过 macOS Vision 本地 OCR 后转备忘
+- 删除新导入的图片或原生截屏时，中转站副本与原文件会一起移到系统废纸篓
+- 文字备忘、语音录音、本地语音文件导入与 macOS Speech 本地转写
+- 每项备忘可设置 DDL、提前提醒、完成/超时状态
+- 月历 DDL 视图与今日 24 小时时钟视图
+- 可配置 DeepSeek API，对 OCR、语音转写或文字进行精简总结
+- DeepSeek 可把语音、文字和 OCR 内容拆成多个带优先级、DDL 与提醒的待办；预览确认后才会写入
+- 每个待办可从八种高区分度标记颜色中选择；圆环从同一起点叠加显示全部 DDL 的彩色进度弧
+- 小球内每 10 秒轮播有 DDL 待办的截止倒计时与颜色圆点
+- 悬停小球时显示全部未完成待办的“颜色圆点＋标题”，支持滚轮或滑动横向切换
+- 可把图片或视频直接拖到迷你球上吸入中转站，成功后播放一次短暂回弹动画
+- DeepSeek API Key 使用 Electron `safeStorage` 接入 macOS 安全存储
 
-- **自动捕获截图** — 使用 Mac 自带截图（⌘⇧3/⌘⇧4），图片自动进入面板
-- **⌘⇧X 快速截图** — 应用内快捷键，框选截图直接保存
-- **⌘V 粘贴** — 将剪贴板中的图片存入面板
-- **拖入图片** — 从 Finder 或浏览器拖入图片
-- **单击复制** — 点击缩略图上的复制按钮，图片回到剪贴板
-- **拖出使用** — 直接把缩略图拖进其他 App
-- **浮动置顶** — 窗口始终显示在最上层，切换 App 也不会消失
+## 本地开发
 
-## 安装
-
-### 直接下载
-
-前往 [Releases](https://github.com/zemei641-ship-it/image-staging-board/releases/latest) 下载对应平台的文件：
-
-| 平台 | 文件 | 说明 |
-|------|------|------|
-| **macOS** (Apple Silicon) | `图片剪贴板-x.x.x-arm64.dmg` | 打开 DMG，拖入 Applications |
-| **Windows** (x64) | `图片剪贴板-x.x.x-win-x64.zip` | 解压后运行 `图片剪贴板.exe` |
-
-> **macOS 注意**：未签名应用首次打开需右键 → 打开，或执行：
-> ```bash
-> xattr -cr /Applications/图片剪贴板.app
-> ```
-
-### 用 AI 一键安装
-
-把仓库链接发给 Claude Code 并说「帮我安装这个」，AI 会自动完成克隆、依赖安装和启动。
-
-### 从源码运行
+需要 Node.js 18+、npm 和 macOS Command Line Tools。
 
 ```bash
-git clone https://github.com/zemei641-ship-it/image-staging-board.git
-cd image-staging-board
 npm install
+mkdir -p native/bin
+xcrun clang -O2 -fobjc-arc -framework Foundation -framework Vision \
+  native/src/image-ocr.m -o native/bin/image-ocr
+xcrun clang -O2 -fobjc-arc -framework Foundation -framework Speech \
+  native/src/speech-transcribe.m -o native/bin/speech-transcribe
 npm start
 ```
 
-需要 Node.js 18+ 和 npm。
+## 构建
 
-## 截图保存位置
+```bash
+npm run check
+npm run build:mac
+```
 
-所有图片保存在 `~/Pictures/ImageClipboard/`，可点击工具栏 📁 按钮直接打开。
+Apple Silicon 应用生成在：
 
-## 技术栈
+```text
+dist/mac-arm64/ImageMemoBoard.app
+```
 
-- Electron 35
-- chokidar（文件监听）
-- 原生 macOS clipboard API
+## 数据位置
+
+- 图片：`~/Pictures/ImageClipboard/`
+- 备忘、设置和录音：`~/Library/Application Support/ImageMemoBoard/`
+
+初版提醒依赖应用在后台运行。窗口收起后应用仍保持运行，可在设置中“完全退出应用”。
+
+## DeepSeek
+
+设置页可修改 API 地址、模型和 API Key。默认使用官方 Chat Completions 地址和 `deepseek-v4-flash`，但不内置任何 Key。发送总结前应用会再次确认。
 
 ## License
 
